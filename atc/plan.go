@@ -1,5 +1,169 @@
 package atc
 
+// // current
+// atc.Plan {
+// 	Task: TaskPlan {
+// 		// custom resource type
+// 		// getvar
+// 	}
+// }
+
+// // a
+// Plan: atc.Plan {
+// 	InParallel: {
+// 		Plan {
+// 			Check: // resource type
+// 		},
+// 		Plan {
+// 			GetVar: // getvar
+// 		},
+// 	},
+// 	Plan {
+// 		Task: // references the Check and GetVar
+// 	}
+// }
+
+// resource_types:
+// - name: a
+// 	type: registry-image
+// - name: b
+// 	type a
+// - name: c
+// 	type b
+
+// jobs:
+// - name: foo
+// 	plan:
+// 		- get: c
+//			version: &&b-check
+
+// Plan: {
+// 	Check {
+// 		Name: a-check
+// 	}
+// 	Get: {
+// 		Name: a-get
+// 		Version: a-check
+// 	}
+// 	Check {
+// 		Name: b-check
+// 	}
+// 	Get: {
+// 		Name: b-get
+// 		Version: b-check
+// 	}
+// 	Check {
+// 		Name: c-check
+// 	}
+// 	Get: {
+// 		Name: c-get
+// 		Version: c-check
+// 	}
+// }
+
+// Plan: {
+// 	Check {
+// 		Name: a-check
+// 		ImageSpec: // default registry-image
+// 	} // produces "abc" and stores in runState["a-check"]
+// 	Get: {
+// 		Name: a-get
+// 		Version: [[a-check]]	// "abc"
+// 		Vars: map[string]string {
+// 			version: "((a-check))"	// lookup runState.GetVar("a-check") and store resulte in Version
+// 		}
+// 	}
+// 	Check {
+// 		Name: b-check
+// 		ImageSpec:
+// 		Vars: map[string]string {
+// 			imagespec: a-get
+// 		}
+// 	}
+// 	Get: {
+// 		Name: b-get
+// 		Version: b-check
+// 	}
+// 	Check {
+// 		Name: c-check
+// 	}
+// 	Get: {
+// 		Name: c-get
+// 		Version: c-check
+// 	}
+// }
+
+// resource_types:
+// - name: vault
+// 	type: registry-image
+// 	source:
+// 		repository: hashicorp/vault
+
+// var_sources:
+// - name: z
+// - name: a
+// 	type: vault
+// 	source:
+// 		team: a
+// 		token: Bearer ((z:token))
+
+// plan:
+// - get_var: path
+// 	source: a
+// - get: foo
+// 	params:
+// 	- foo: ((.:path))
+
+// Plan: {
+// 	GetVar: {
+// 		PlanID: "z-get-var"
+// 		Name: "z",
+// 		Path: "token",
+// 	},
+// 	Check: {
+// 		PlanID: "a-check"
+// 	},
+// 	Get: {
+// 		PlanID: "a-get"
+// 	},
+// 	GetVar: {
+// 		PlanID: "a-get-var"
+// 		Name: "a",
+// 		Path: "path",
+// 		ImageSpec: [[a-get]],	// filled from "a-get"
+// 		Source: {	// filled in from global creds
+// 			"team": "a",
+// 			"token": "Bearer [[z-get-var]]"
+// 		},
+// 	},	// 1. store result in runState["a:path"]
+// 	GetVar: {
+// 		PlanID: "b-get-var"
+// 		Name: "b",
+// 		Path: "path",
+// 		Source: atc.Source {	// 2. Source.Evaulate(runState)
+// 			"foo": "((a:path))",	// 3. go through and template (()) by looking up runState.GetVar(...)
+// 		}
+// 	},	// 4. store result in runState["b:path"]
+// 	Get: {
+// 		PlanID: "get-foo"
+// 		Name: "foo",
+// 		Params: atc.Params{
+// 			"foo": "((.:path))",
+// 		}
+// 	}
+// }
+
+// // b
+// atc.PlanContext {
+// 	ResourceTypeConfig:
+// 	VarSourceConfig:
+
+// 	Plan: atc.Plan {
+// 		Task: TaskPlan {
+// 			// ResourceTypeConfig and VarSourceConfig gets passed around and dynamically creates new steps
+// 		}
+// 	}
+// }
 type Plan struct {
 	ID       PlanID `json:"id"`
 	Attempts []int  `json:"attempts,omitempty"`
@@ -188,9 +352,9 @@ type GetPlan struct {
 	Name string `json:"name,omitempty"`
 
 	// The resource config to fetch from.
-	Type                   string                 `json:"type"`
-	Source                 Source                 `json:"source"`
-	VersionedResourceTypes VersionedResourceTypes `json:"resource_types,omitempty"`
+	Type                  string                `json:"type"`
+	Source                Source                `json:"source"`
+	VersionedResourceType VersionedResourceType `json:"resource_types,omitempty"`
 
 	// The version of the resource to fetch. One of these must be specified.
 	Version     *Version `json:"version,omitempty"`
